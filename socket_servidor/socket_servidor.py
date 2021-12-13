@@ -2,6 +2,7 @@
 #   Python y Linux
 #   Proyecto final - socket_servidor
 #   Nayeli Gissel Larios Pérez
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
 
@@ -19,6 +20,7 @@ class SocketServer:
         self.port_and_ip = ('127.0.0.1', 12345)
         # Atributo donde se almacena la respuesta
         self.resp = ""
+        logging.debug(">SERVIDOR socket creado")
 
     def bind(self):
         # El socket solo se puede ver desde la misma maquina
@@ -31,11 +33,13 @@ class SocketServer:
     def accept(self):
         # Acepta conexiones
         self.connection, addr = self.node.accept()
+        logging.debug(">SERVIDOR acepta conexion : {} puerto {}".format(addr[0], addr[1]))
 
     # Metodo que cierra el socket
     def close(self):
         self.node.shutdown(socket.SHUT_RDWR)
         self.node.close()
+        logging.debug(">SERVIDOR socket cerrado")
 
     # Metodo que envia el mensaje por el socket
     def send_sms(self, sms):
@@ -43,7 +47,7 @@ class SocketServer:
 
     # Metodo que procesa la informacion que se va a mandar
     def write(self):
-        logging.debug("<<:{}".format(self.resp))
+        logging.debug("<<{}".format(self.resp))
         self.send_sms(self.resp)
 
     # Metodo que procesa los datos que se reciben por el socket
@@ -53,14 +57,18 @@ class SocketServer:
             # Se indica que recibira mensajes de tamano 20
             msg = self.connection.recv(20).decode()
             logging.debug(">>{}".format(msg))
-            # self.resp = str(int(msg) + 14)
+            self.resp = str("ok")
+            self.write()
+
+    def inicializaSocket(self):
+        self.bind()
+        self.listen()
+        self.accept()
 
 
 if __name__ == '__main__':
     server = SocketServer()
-    server.bind()
-    server.listen()
-    server.accept()
+    server.inicializaSocket()
     server.read()
     server.close()
-    logging.debug("FIN")
+    logging.debug(">SERVIDOR FIN")

@@ -2,6 +2,7 @@
 #   Python y Linux
 #   Proyecto final - socket_cliente
 #   Nayeli Gissel Larios Pérez
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
 
@@ -16,21 +17,22 @@ class SocketClient:
         self.node = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Se especifica la ip y el puerto de conexion
         self.port_and_ip = ('127.0.0.1', 12345)
-        logging.debug(">>CLIENTE socket creado")
+        self.tpe_comunicacion = ThreadPoolExecutor(max_workers=3)
+        logging.debug(">CLIENTE socket creado")
 
     def connect(self):
         # Conecta el socket a la direccion especificada
         try:
             self.node.connect(self.port_and_ip)
         except ConnectionRefusedError:
-            logging.debug(">>CLIENTE socket servidor en {} no esta activo".format(self.port_and_ip[0]))
-        logging.debug(">>CLIENTE socket conectado a {}".format(self.port_and_ip[0]))
+            logging.debug(">CLIENTE socket servidor en {} no esta activo".format(self.port_and_ip[0]))
+        logging.debug(">CLIENTE socket conectado a {} puerto {}".format(self.port_and_ip[0], self.port_and_ip[1]))
 
     # Metodo que cierra el socket
     def close(self):
         self.node.shutdown(socket.SHUT_RDWR)
         self.node.close()
-        logging.debug(">>CLIENTE socket cerrado")
+        logging.debug(">CLIENTE socket cerrado")
 
     # Metodo que envia el mensaje por el socket
     def send_sms(self, sms):
@@ -39,7 +41,7 @@ class SocketClient:
     # Metodo que procesa la informacion que se va a mandar
     def write(self, text):
         message = text
-        logging.debug(">>:{}".format(text))
+        logging.debug(">>{}".format(text))
         self.send_sms(message)
 
     # Metodo que procesa los datos que se reciben por el socket
@@ -47,16 +49,16 @@ class SocketClient:
         msg = ""
         while msg == "":
             # Se indica que recibira mensajes de tamano
-            msg = self.node.recv(2).decode()
+            msg = self.node.recv(20).decode()
             if msg != "":
-                logging.debug("<<:{}".format(msg))
+                logging.debug("<<{}".format(msg))
 
     def comunicacion(self):
         message = ""
         while message != "exit":
-            message = input("> ")
+            message = input(">> ")
             self.write(message)
-            # client.read()
+            client.read()
         client.close()
 
 
@@ -64,3 +66,4 @@ if __name__ == '__main__':
     client = SocketClient()
     client.connect()
     client.comunicacion()
+    logging.debug(">CLIENTE FIN")
