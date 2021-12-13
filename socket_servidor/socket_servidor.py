@@ -3,6 +3,7 @@
 #   Proyecto final - socket_servidor
 #   Nayeli Gissel Larios Pérez
 from concurrent.futures import ThreadPoolExecutor
+from objetoSeguro import ObjetoSeguro
 import logging
 import socket
 
@@ -11,7 +12,7 @@ logging.basicConfig(format='DEBUG : %(message)s',
 
 
 class SocketServer:
-    def __init__(self):
+    def __init__(self, id_servidor: str):
         # atributos de la clase SocketServer
         # Crea el socket de comunicacion de tipo stream
         self.connection = None
@@ -22,6 +23,8 @@ class SocketServer:
         self.tpe_comunicacion = ThreadPoolExecutor(max_workers=2)
         # Atributo donde se almacena la respuesta
         self.resp = ""
+        self.mensaje_seguro = ObjetoSeguro("s"+id_servidor)
+        self.llavePublicaReceptor = bytearray()
         logging.debug(">SERVIDOR socket creado")
 
     def bind(self):
@@ -53,18 +56,22 @@ class SocketServer:
             if self.resp == "":
                 pass
             else:
-                logging.debug("<<{}".format(self.resp))
-                self.send_sms(self.resp)
+                aux = self.mensaje_seguro.nombre + ":" + self.resp
+                logging.debug("<<{}".format(aux))
+                self.send_sms(aux)
                 self.resp = ""
-        self.send_sms("exit")
+        self.send_sms(self.mensaje_seguro.nombre + ":exit")
 
     # Metodo que procesa los datos que se reciben por el socket
     def read(self):
         msg = ""
-        while msg != "exit":
+        extrae_msg = ""
+        while extrae_msg != "exit":
             # Se indica que recibira mensajes de tamano 20
             msg = self.connection.recv(20).decode()
             logging.debug(">>{}".format(msg))
+            extrae_id = msg[0].split(":", 1)
+            extrae_msg = msg[1].split(":", 1)
             self.resp = str("ok")
         self.resp = str("exit")
 
@@ -84,7 +91,7 @@ class SocketServer:
 
 
 if __name__ == '__main__':
-    server = SocketServer()
+    server = SocketServer("1")
     server.inicializa_socket()
     server.comunicacion()
     logging.debug(">SERVIDOR FIN")

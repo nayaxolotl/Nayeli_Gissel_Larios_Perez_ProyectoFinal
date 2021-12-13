@@ -64,8 +64,8 @@ class ObjetoSeguro:
         with archivo as f:
             for texto in f:
                 linea = texto.split(",", maxsplit=1)
-                extrae_id = linea[0].split(":")
-                extrae_txt = linea[1].split(":")
+                extrae_id = linea[0].split(":", 1)
+                extrae_txt = linea[1].split(":", 1)
                 if int(extrae_id[1]) == id:
                     print(f"ID {id}: {extrae_txt[1]}")
         aux = dict(
