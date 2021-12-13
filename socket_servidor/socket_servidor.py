@@ -18,6 +18,8 @@ class SocketServer:
         self.node = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Se especifica la ip y el puerto de conexion
         self.port_and_ip = ('127.0.0.1', 12345)
+        # Administrador de threads un hilo para recepcion y otro para transmision
+        self.tpe_comunicacion = ThreadPoolExecutor(max_workers=2)
         # Atributo donde se almacena la respuesta
         self.resp = ""
         logging.debug(">SERVIDOR socket creado")
@@ -47,8 +49,14 @@ class SocketServer:
 
     # Metodo que procesa la informacion que se va a mandar
     def write(self):
-        logging.debug("<<{}".format(self.resp))
-        self.send_sms(self.resp)
+        while self.resp != "exit":
+            if self.resp == "":
+                pass
+            else:
+                logging.debug("<<{}".format(self.resp))
+                self.send_sms(self.resp)
+                self.resp = ""
+        self.send_sms("exit")
 
     # Metodo que procesa los datos que se reciben por el socket
     def read(self):
@@ -58,19 +66,25 @@ class SocketServer:
             msg = self.connection.recv(20).decode()
             logging.debug(">>{}".format(msg))
             self.resp = str("ok")
-            self.write()
         self.resp = str("exit")
-        self.write()
 
-    def inicializaSocket(self):
+    # Metodo que llama a los metodos necesarios para iniciar una conexion
+    def inicializa_socket(self):
         self.bind()
         self.listen()
         self.accept()
 
+    # Metodo que ejecuta los hilos de comunicacion
+    def comunicacion(self):
+        write = self.tpe_comunicacion.submit(self.write)
+        read = self.tpe_comunicacion.submit(self.read)
+        while not write.done() and not read.done():
+            pass
+        self.close()
+
 
 if __name__ == '__main__':
     server = SocketServer()
-    server.inicializaSocket()
-    server.read()
-    server.close()
+    server.inicializa_socket()
+    server.comunicacion()
     logging.debug(">SERVIDOR FIN")

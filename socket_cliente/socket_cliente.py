@@ -17,6 +17,7 @@ class SocketClient:
         self.node = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Se especifica la ip y el puerto de conexion
         self.port_and_ip = ('127.0.0.1', 12345)
+        # Administrador de threads un hilo para recepcion y otro para transmision
         self.tpe_comunicacion = ThreadPoolExecutor(max_workers=2)
         logging.debug(">CLIENTE socket creado")
 
@@ -57,9 +58,13 @@ class SocketClient:
                 if message != "exit":
                     message = ""
 
+    # Metodo que ejecuta los hilos de comunicacion
     def comunicacion(self):
-        self.tpe_comunicacion.submit(self.write)
-        self.tpe_comunicacion.submit(self.read())
+        write = self.tpe_comunicacion.submit(self.write)
+        read = self.tpe_comunicacion.submit(self.read)
+        while not write.done() and not read.done():
+            pass
+        self.close()
 
 
 if __name__ == '__main__':
