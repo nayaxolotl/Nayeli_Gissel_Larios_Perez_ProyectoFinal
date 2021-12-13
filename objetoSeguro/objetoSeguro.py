@@ -1,6 +1,6 @@
 #   Desarrollo de talento especializado 2021-2: Ciberseguridad
 #   Python y Linux
-#   PL_Proyecto1 - Objeto seguro
+#   Proyecto final - objetoSeguro
 #   Nayeli Gissel Larios Pérez
 
 from Crypto.PublicKey import RSA
