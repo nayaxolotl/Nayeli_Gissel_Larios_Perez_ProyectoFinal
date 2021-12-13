@@ -17,7 +17,7 @@ class SocketClient:
         self.node = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # Se especifica la ip y el puerto de conexion
         self.port_and_ip = ('127.0.0.1', 12345)
-        self.tpe_comunicacion = ThreadPoolExecutor(max_workers=3)
+        self.tpe_comunicacion = ThreadPoolExecutor(max_workers=2)
         logging.debug(">CLIENTE socket creado")
 
     def connect(self):
@@ -39,27 +39,27 @@ class SocketClient:
         self.node.send(sms.encode())
 
     # Metodo que procesa la informacion que se va a mandar
-    def write(self, text):
-        message = text
-        logging.debug(">>{}".format(text))
-        self.send_sms(message)
-
-    # Metodo que procesa los datos que se reciben por el socket
-    def read(self):
-        msg = ""
-        while msg == "":
-            # Se indica que recibira mensajes de tamano
-            msg = self.node.recv(20).decode()
-            if msg != "":
-                logging.debug("<<{}".format(msg))
-
-    def comunicacion(self):
+    def write(self):
         message = ""
         while message != "exit":
             message = input(">> ")
-            self.write(message)
-            client.read()
-        client.close()
+            logging.debug(">>{}".format(message))
+            self.send_sms(message)
+
+    # Metodo que procesa los datos que se reciben por el socket
+    def read(self):
+        message = ""
+        while message == "":
+            # Se indica que recibira mensajes de tamano
+            message = self.node.recv(20).decode()
+            if message != "":
+                logging.debug("<<{}".format(message))
+                if message != "exit":
+                    message = ""
+
+    def comunicacion(self):
+        self.tpe_comunicacion.submit(self.write)
+        self.tpe_comunicacion.submit(self.read())
 
 
 if __name__ == '__main__':

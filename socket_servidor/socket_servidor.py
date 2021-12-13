@@ -59,6 +59,8 @@ class SocketServer:
             logging.debug(">>{}".format(msg))
             self.resp = str("ok")
             self.write()
+        self.resp = str("exit")
+        self.write()
 
     def inicializaSocket(self):
         self.bind()
