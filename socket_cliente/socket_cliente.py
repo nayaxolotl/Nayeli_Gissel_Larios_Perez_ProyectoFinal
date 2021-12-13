@@ -19,7 +19,7 @@ class SocketClient:
         # Se especifica la ip y el puerto de conexion
         self.port_and_ip = ('127.0.0.1', 12345)
         # Administrador de threads un hilo para recepcion y otro para transmision
-        self.tpe_comunicacion = ThreadPoolExecutor(max_workers=2)
+        self.tpe_comunicacion = ThreadPoolExecutor(max_workers=3)
         # Atributo donde se almacena la respuesta
         self.resp = ""
         self.mensaje_seguro = ObjetoSeguro("c"+id_cliente)
@@ -43,14 +43,17 @@ class SocketClient:
     # Metodo que envia el mensaje por el socket
     def send_sms(self, sms):
         self.node.send(sms.encode())
+        self.resp = ""
 
     # Metodo que procesa la informacion que se va a mandar
     def write(self):
-        message = ""
-        while message != "exit":
-            message = input(">> ")
-            logging.debug(">>{}".format(message))
-            self.send_sms(message)
+        while self.resp != "exit":
+            if self.resp == "":
+                pass
+            else:
+                aux = self.mensaje_seguro.nombre + ":" + self.resp
+                logging.debug(">>{}".format(aux))
+                self.send_sms(aux)
 
     # Metodo que procesa los datos que se reciben por el socket
     def read(self):
@@ -60,22 +63,34 @@ class SocketClient:
             message = self.node.recv(20).decode()
             if message != "":
                 logging.debug("<<{}".format(message))
-                extrae_id = message[0].split(":", 1)
-                extrae_msg = message[1].split(":", 1)
-                if extrae_msg != "exit":
+                extrae = message.split(":")
+                if extrae[1] != "exit":
                     message = ""
+
+    # Metodo para capturar mensaje de la terminal
+    def captura_mensaje(self):
+        while True:
+            self.resp = input()
 
     # Metodo que ejecuta los hilos de comunicacion
     def comunicacion(self):
         write = self.tpe_comunicacion.submit(self.write)
         read = self.tpe_comunicacion.submit(self.read)
+        self.habilita_terminal()
         while not write.done() and not read.done():
             pass
         self.close()
+
+    def habilita_terminal(self):
+        self.tpe_comunicacion.submit(self.captura_mensaje)
+
+    def saludo(self):
+        self.resp = "Hola"
 
 
 if __name__ == '__main__':
     client = SocketClient("1")
     client.connect()
     client.comunicacion()
+    client.habilita_terminal()
     logging.debug(">CLIENTE FIN")

@@ -65,13 +65,12 @@ class SocketServer:
     # Metodo que procesa los datos que se reciben por el socket
     def read(self):
         msg = ""
-        extrae_msg = ""
-        while extrae_msg != "exit":
+        extrae = ["", ""]
+        while extrae[1] != "exit":
             # Se indica que recibira mensajes de tamano 20
             msg = self.connection.recv(20).decode()
             logging.debug(">>{}".format(msg))
-            extrae_id = msg[0].split(":", 1)
-            extrae_msg = msg[1].split(":", 1)
+            extrae = msg.split(":")
             self.resp = str("ok")
         self.resp = str("exit")
 
@@ -89,9 +88,13 @@ class SocketServer:
             pass
         self.close()
 
+    def saludo(self):
+        pass
+
 
 if __name__ == '__main__':
     server = SocketServer("1")
     server.inicializa_socket()
     server.comunicacion()
+    server.saludo()
     logging.debug(">SERVIDOR FIN")
